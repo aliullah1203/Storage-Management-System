@@ -13,18 +13,40 @@ const signToken = (user) =>
   });
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "Missing fields" });
+  const { name, gender, email, password, confirmPassword, agree } = req.body;
+
+  // Basic validation
+  if (!name || !gender || !email || !password || !confirmPassword)
+    return res.status(400).json({ error: "All fields are required" });
+
+  if (!agree)
+    return res.status(400).json({ error: "You must agree to the terms" });
+
+  if (password !== confirmPassword)
+    return res.status(400).json({ error: "Passwords do not match" });
+
   try {
+    // Check existing user
     const existing = await User.findOne({ email });
     if (existing)
       return res.status(400).json({ error: "Email already in use" });
-    const user = await User.create({ name, email, password });
-    // Return a simplified response for frontend
-    return res.json({ success: true, message: "User registered" });
+
+    // Create user
+    const user = await User.create({
+      name,
+      gender,
+      email,
+      password,
+    });
+
+    // Success response (no sensitive data)
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Register error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -46,14 +68,20 @@ exports.login = async (req, res) => {
 
 exports.me = async (req, res) => {
   const user = req.user;
-  // return simplified user object
-  res.json({ _id: user._id, name: user.name, email: user.email });
+
+  return res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    gender: user.gender,
+  });
 };
 
 // update profile
 exports.updateProfile = async (req, res) => {
   const user = req.user;
   const { name, email, password } = req.body;
+
   try {
     if (email && email !== user.email) {
       const exists = await User.findOne({ email });
@@ -61,10 +89,23 @@ exports.updateProfile = async (req, res) => {
         return res.status(400).json({ error: "Email already in use" });
       user.email = email;
     }
+
     if (name) user.name = name;
-    if (password) user.password = password; // will be hashed by pre-save hook
+    if (password) user.password = password;
+
+    // profile picture
+    if (req.file) {
+      user.profilePic = `/uploads/profile/${req.file.filename}`;
+    }
+
     await user.save();
-    return res.json({ _id: user._id, name: user.name, email: user.email });
+
+    return res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePic: user.profilePic,
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -123,19 +164,46 @@ exports.forgotPassword = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-  const { token, password } = req.body;
-  if (!token || !password)
-    return res.status(400).json({ error: "Missing fields" });
+  const { token, newPassword, confirmPassword } = req.body;
+
+  // 1️⃣ Validation
+  if (!token || !newPassword || !confirmPassword) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return res.status(400).json({ error: "Passwords do not match" });
+  }
+
+  if (newPassword.length < 6) {
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 6 characters" });
+  }
+
   try {
+    // Token check
     const entry = await ResetToken.findOne({ token }).populate("user");
-    if (!entry || entry.expiresAt < new Date())
+    if (!entry || entry.expiresAt < new Date()) {
       return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    // Update password
     const user = entry.user;
-    user.password = password;
+
+    // will be hashed by pre-save hook
+    user.password = newPassword;
     await user.save();
+
+    // Cleanup tokens
     await ResetToken.deleteMany({ user: user._id });
-    res.json({ ok: true, message: "Password reset successful" });
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Reset password error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 };

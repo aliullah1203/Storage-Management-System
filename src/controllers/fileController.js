@@ -334,7 +334,7 @@ exports.rename = async (req, res) => {
     const file = await File.findOneAndUpdate(
       { _id: req.params.id, owner: req.user._id },
       { name },
-      { new: true }
+      { new: true },
     );
     if (!file) return res.status(404).json({ error: "Not found" });
     res.json({ file });
@@ -431,5 +431,18 @@ exports.usage = async (req, res) => {
     return res.json({ totalFiles, totalSizeMB });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+};
+
+// GET recent uploaded files for logged-in user
+exports.getRecentFiles = async (req, res) => {
+  try {
+    const files = await File.find({ owner: req.user._id })
+      .sort({ createdAt: -1 }) // newest first
+      .limit(10); // latest 10 files
+    res.json(files);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch recent files" });
   }
 };

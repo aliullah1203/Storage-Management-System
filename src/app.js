@@ -1,22 +1,31 @@
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const routes = require('./routes');
+const express = require("express");
+const cors = require("cors");
+const morgan = require("morgan");
+const passport = require("./services/passport");
+const routes = require("./routes");
+const path = require("path");
 
 function createApp() {
   const app = express();
+
   app.use(cors());
-  app.use(morgan('dev'));
+  app.use(morgan("dev"));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // static uploads
-  const path = require('path');
-  app.use('/uploads', require('express').static(path.join(__dirname, '..', 'uploads')));
+  // Passport initialize
+  app.use(passport.initialize());
 
-  app.use('/api', routes);
+  // Static uploads
+  app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
-  app.get('/', (req, res) => res.json({ ok: true, message: 'Storage Management API' }));
+  // API routes
+  app.use("/api", routes);
+
+  // Root
+  app.get("/", (req, res) =>
+    res.json({ ok: true, message: "Storage Management API" }),
+  );
 
   return app;
 }

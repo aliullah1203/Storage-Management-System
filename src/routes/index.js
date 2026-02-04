@@ -5,6 +5,4 @@ const router = express.Router();
 router.use("/auth", require("./auth"));
 router.use("/files", require("./files"));
 
-// bank account endpoints
-
 module.exports = router;
