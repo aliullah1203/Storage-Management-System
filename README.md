@@ -3,16 +3,47 @@ A secure and user-friendly backend system to manage, organize and share files, n
 
 
 # Features
-- User authentication: signup, login, forgot/reset password
-- File management: upload, Favorite, Copy, Rename, Duplicate, Delete, Share
-- Note management: create and manage notes
-- Folder management: organize files, images and notes
-- Favorites: mark/unmark files as favorites
-- Sharing: share files with other users and others...!
-- Lock/Unlock files for privacy
-- Calendar & date filter for files
-- File usage stats
-- Profile update & account deletion
+- User Authentication:
+- Signup / Register
+- Login
+- Forgot password & Reset password
+- Google OAuth login
+
+File Management:
+- Upload files (any type)
+- Copy files
+- Rename files
+- Duplicate files
+- Delete files
+- Mark / Unmark as Favorite
+- Lock / Unlock files for privacy
+- Share files with other users
+
+Note Management:
+- Create and manage notes
+- Attach notes to folders
+
+Folder Management:
+- Organize files, images, and notes
+- View files by folder
+
+Favorites:
+- Quickly access favorite files
+
+Sharing:
+- Share files with other users or external links
+
+Calendar & Filtering:
+- Filter files by date
+- View files in a calendar view
+
+File Usage:
+- Track storage usage
+- Monitor used vs available storage
+
+User Profile:
+- Update profile (name, email, profile picture)
+- Delete account
 
 # Tech Stack
 - Backend: Node.js, Express.js  
