@@ -3,7 +3,7 @@ A secure and user-friendly backend system to manage, organize and share files, n
 
 
 # Features
-- User Authentication:
+User Authentication:
 - Signup / Register
 - Login
 - Forgot password & Reset password
